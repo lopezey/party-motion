@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: party-motion-lopezey
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeployTrigger: commit
