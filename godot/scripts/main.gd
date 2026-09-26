@@ -267,6 +267,27 @@ func handle_message(message: Dictionary) -> void:
 			mark_player_disconnected(message.get("playerId", ""))
 		"motion":
 			apply_motion(message)
+		"party_command":
+			handle_party_command(message.get("command", ""))
+
+
+func handle_party_command(command: String) -> void:
+	match command:
+		"start_party":
+			if phase == Phase.LOBBY:
+				start_party()
+		"start_round":
+			if phase == Phase.TUTORIAL:
+				start_round()
+		"next_round":
+			if phase == Phase.RESULTS and current_game_index < GAMES.size() - 1:
+				advance_after_results()
+		"show_final":
+			if phase == Phase.RESULTS and current_game_index == GAMES.size() - 1:
+				advance_after_results()
+		"play_again":
+			if phase == Phase.FINAL:
+				start_party()
 
 
 func add_player(data: Dictionary) -> void:
@@ -514,31 +535,48 @@ func sync_controller(id: String) -> void:
 	var round_label := "LOBBY"
 	var heading := "Waiting for the host"
 	var instructions := "Hold your phone naturally and calibrate when ready."
+	var host_command := "start_party"
+	var host_button_label := "START PARTY"
+	var host_button_enabled := connected_player_count() > 0
 	match phase:
 		Phase.TUTORIAL:
 			game_id = current_game()["id"]
 			round_label = "ROUND %d OF %d" % [current_game_index + 1, GAMES.size()]
 			heading = current_game()["title"]
 			instructions = current_game()["instructions"]
+			host_command = "start_round"
+			host_button_label = "START ROUND"
+			host_button_enabled = true
 		Phase.PLAYING:
 			game_id = current_game()["id"]
 			round_label = "GO!  ROUND %d" % (current_game_index + 1)
 			heading = current_game()["verb"]
 			instructions = current_game()["instructions"]
+			host_command = ""
+			host_button_label = "ROUND IN PROGRESS"
+			host_button_enabled = false
 		Phase.RESULTS:
 			game_id = "results"
 			round_label = "ROUND RESULTS"
 			heading = "Score: %s" % score_text(player["round_score"])
 			instructions = "Watch the shared screen for the standings."
+			host_command = "show_final" if current_game_index == GAMES.size() - 1 else "next_round"
+			host_button_label = "FINAL RESULTS" if current_game_index == GAMES.size() - 1 else "NEXT ROUND"
+			host_button_enabled = true
 		Phase.FINAL:
 			game_id = "final"
 			round_label = "FINAL RESULTS"
 			heading = "%d crowns" % player["crowns"]
 			instructions = "Thanks for playing Party Motion!"
+			host_command = "play_again"
+			host_button_label = "PLAY AGAIN"
+			host_button_enabled = true
 	send_json({
 		"type": "controller_state", "playerId": id, "game": game_id,
 		"roundLabel": round_label, "title": heading, "instructions": instructions,
-		"crowns": player["crowns"], "points": player["points"]
+		"crowns": player["crowns"], "points": player["points"],
+		"hostCommand": host_command, "hostButtonLabel": host_button_label,
+		"hostButtonEnabled": host_button_enabled
 	})
 
 

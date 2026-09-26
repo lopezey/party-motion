@@ -69,4 +69,7 @@ header { display: flex; align-items: center; justify-content: space-between; col
 .motion-readout i { position: relative; z-index: 1; grid-column: 2; grid-row: 1; display: block; width: 0%; height: 5px; border-radius: 9px; background: var(--accent); transition: width .08s linear; }
 .actions { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
 .actions button { min-height: 58px; }
+.leader-controls { margin-top: 14px; padding: 14px; border: 1px solid color-mix(in srgb, var(--accent), transparent 55%); border-radius: 18px; background: color-mix(in srgb, var(--accent), transparent 90%); }
+.leader-controls p { margin: 0 0 9px; color: var(--accent); font-size: .65rem; font-weight: 900; letter-spacing: .15em; }
+.leader-controls button { width: 100%; min-height: 58px; }
 .motion-only { margin: 14px 8px 0; color: #78849a; text-align: center; font-size: .78rem; }

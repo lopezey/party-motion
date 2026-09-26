@@ -171,9 +171,14 @@ export class Room extends DurableObject {
         resumeToken = randomToken(18);
         await this.ctx.storage.put(`resume:${resumeToken}`, { player, createdAt: Date.now() });
       }
+      if (!room.leaderId) {
+        room.leaderId = player.id;
+        await this.ctx.storage.put("room", room);
+      }
+      const isLeader = room.leaderId === player.id;
       server.serializeAttachment({ role: "controller", player, resumeToken });
       this.ctx.acceptWebSocket(server, ["controller", `player:${player.id}`]);
-      this.send(server, { type: "welcome", player, roomCode: room.code, resumeToken });
+      this.send(server, { type: "welcome", player, roomCode: room.code, resumeToken, isLeader });
       this.broadcastHosts({ type: "player_joined", player });
     }
 
@@ -216,7 +221,10 @@ export class Room extends DurableObject {
         title: String(message.title || "Get ready").slice(0, 60),
         instructions: String(message.instructions || "Watch the shared screen.").slice(0, 180),
         crowns: Number(message.crowns) || 0,
-        points: Number(message.points) || 0
+        points: Number(message.points) || 0,
+        hostCommand: String(message.hostCommand || "").slice(0, 24),
+        hostButtonLabel: String(message.hostButtonLabel || "").slice(0, 40),
+        hostButtonEnabled: Boolean(message.hostButtonEnabled)
       };
       const playerId = String(message.playerId || "");
       const targets = playerId ? this.ctx.getWebSockets(`player:${playerId}`) : this.ctx.getWebSockets("controller");
@@ -225,6 +233,16 @@ export class Room extends DurableObject {
     }
 
     if (attachment?.role !== "controller") return;
+
+    if (message.type === "party_command") {
+      const room = await this.ctx.storage.get("room");
+      const command = String(message.command || "");
+      const allowed = ["start_party", "start_round", "next_round", "show_final", "play_again"];
+      if (room?.leaderId === attachment.player.id && allowed.includes(command)) {
+        this.broadcastHosts({ type: "party_command", playerId: attachment.player.id, command });
+      }
+      return;
+    }
 
     if (message.type === "motion") {
       this.broadcastHosts({
@@ -256,21 +274,28 @@ export class Room extends DurableObject {
 
   async webSocketClose(socket) {
     const attachment = socket.deserializeAttachment();
-    if (attachment?.role === "controller") {
-      const replacements = this.ctx.getWebSockets(`player:${attachment.player.id}`)
-        .filter((candidate) => candidate !== socket && candidate.readyState === WebSocket.OPEN);
-      if (replacements.length > 0) return;
-      this.broadcastHosts({ type: "player_left", playerId: attachment.player.id });
-    }
+    if (attachment?.role === "controller") await this.handleControllerDisconnect(socket, attachment);
   }
 
   async webSocketError(socket) {
     const attachment = socket.deserializeAttachment();
-    if (attachment?.role === "controller") {
-      const replacements = this.ctx.getWebSockets(`player:${attachment.player.id}`)
-        .filter((candidate) => candidate !== socket && candidate.readyState === WebSocket.OPEN);
-      if (replacements.length > 0) return;
-      this.broadcastHosts({ type: "player_left", playerId: attachment.player.id });
-    }
+    if (attachment?.role === "controller") await this.handleControllerDisconnect(socket, attachment);
+  }
+
+  async handleControllerDisconnect(socket, attachment) {
+    const replacements = this.ctx.getWebSockets(`player:${attachment.player.id}`)
+      .filter((candidate) => candidate !== socket && candidate.readyState === WebSocket.OPEN);
+    if (replacements.length > 0) return;
+    this.broadcastHosts({ type: "player_left", playerId: attachment.player.id });
+
+    const room = await this.ctx.storage.get("room");
+    if (room?.leaderId !== attachment.player.id) return;
+    const candidates = this.ctx.getWebSockets("controller")
+      .filter((candidate) => candidate !== socket && candidate.readyState === WebSocket.OPEN);
+    const nextLeader = candidates[0];
+    const nextAttachment = nextLeader?.deserializeAttachment();
+    room.leaderId = nextAttachment?.player?.id || "";
+    await this.ctx.storage.put("room", room);
+    if (nextLeader) this.send(nextLeader, { type: "leader_status", isLeader: true });
   }
 }

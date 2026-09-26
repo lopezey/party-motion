@@ -8,7 +8,8 @@ const elements = {
   motionPanel: document.querySelector("#motionPanel"), motionHint: document.querySelector("#motionHint"),
   bubble: document.querySelector("#bubble"), tiltMeter: document.querySelector("#tiltMeter"),
   shakeMeter: document.querySelector("#shakeMeter"), rotateMeter: document.querySelector("#rotateMeter"),
-  calibrateButton: document.querySelector("#calibrateButton")
+  calibrateButton: document.querySelector("#calibrateButton"), leaderControls: document.querySelector("#leaderControls"),
+  leaderButton: document.querySelector("#leaderButton")
 };
 
 const params = new URLSearchParams(location.search);
@@ -22,6 +23,8 @@ let motionEnabled = false;
 let joinedRoom = "";
 let joinedName = "";
 let reconnectTimer;
+let isLeader = false;
+let leaderCommand = "";
 let latest = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, shake: 0 };
 let previousGravity = { x: 0, y: 0, z: 0 };
 let baseline = { x: 0, y: 0 };
@@ -111,6 +114,15 @@ function applyControllerState(message) {
   if (Number.isFinite(message.crowns)) elements.crowns.textContent = message.crowns;
   if (Number.isFinite(message.points)) elements.points.textContent = message.points;
   elements.motionPanel.dataset.mode = message.game || "lobby";
+  leaderCommand = message.hostCommand || "";
+  elements.leaderButton.textContent = message.hostButtonLabel || "Waiting for host";
+  elements.leaderButton.disabled = !message.hostButtonEnabled || !leaderCommand;
+  elements.leaderControls.classList.toggle("hidden", !isLeader || !leaderCommand);
+}
+
+function applyLeaderStatus(value) {
+  isLeader = Boolean(value);
+  elements.leaderControls.classList.toggle("hidden", !isLeader || !leaderCommand);
 }
 
 function connect(room, name) {
@@ -132,8 +144,11 @@ function connect(room, name) {
       elements.roomBadge.textContent = message.roomCode;
       document.documentElement.style.setProperty("--accent", message.player.color);
       if (message.resumeToken) localStorage.setItem(resumeKey(room), message.resumeToken);
+      applyLeaderStatus(message.isLeader);
     } else if (message.type === "controller_state") {
       applyControllerState(message);
+    } else if (message.type === "leader_status") {
+      applyLeaderStatus(message.isLeader);
     }
   });
   socket.addEventListener("close", () => {
@@ -173,6 +188,12 @@ elements.calibrateButton.addEventListener("click", () => {
   setBubble(0, 0);
   elements.motionHint.textContent = "Calibrated! Hold this position.";
   setTimeout(() => elements.motionHint.textContent = "Motion connected", 1000);
+});
+
+elements.leaderButton.addEventListener("click", () => {
+  if (!isLeader || !leaderCommand || socket?.readyState !== WebSocket.OPEN) return;
+  elements.leaderButton.disabled = true;
+  socket.send(JSON.stringify({ type: "party_command", command: leaderCommand }));
 });
 
 document.addEventListener("visibilitychange", () => {
