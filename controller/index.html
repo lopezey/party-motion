@@ -29,22 +29,28 @@
         <div class="player-card">
           <p>YOU ARE</p>
           <h2 id="playerName"></h2>
+          <div class="scoreline"><span>♛ <b id="crowns">0</b></span><span>PTS <b id="points">0</b></span></div>
+        </div>
+        <div class="game-card">
+          <p id="roundLabel">LOBBY</p>
+          <h3 id="gameTitle">Waiting for the host</h3>
+          <p id="gameInstruction">Keep this screen open.</p>
         </div>
         <div id="motionPanel" class="motion-panel">
           <div id="bubble" class="bubble"></div>
           <div class="crosshair horizontal"></div>
           <div class="crosshair vertical"></div>
-          <p id="motionHint">Move your phone to steer</p>
+          <div class="motion-readout">
+            <div><span>TILT</span><i id="tiltMeter"></i></div>
+            <div><span>SHAKE</span><i id="shakeMeter"></i></div>
+            <div><span>ROTATE</span><i id="rotateMeter"></i></div>
+          </div>
+          <p id="motionHint">Motion connected</p>
         </div>
         <div class="actions">
           <button id="calibrateButton">Calibrate</button>
-          <button id="actionButton" class="primary">BOOST</button>
         </div>
-        <details>
-          <summary>Controller options</summary>
-          <label class="toggle"><input id="motionToggle" type="checkbox" checked /> Use phone motion</label>
-          <p>Motion unavailable? Drag inside the large pad as a touch controller.</p>
-        </details>
+        <p class="motion-only">Gameplay is motion-only. Keep a firm grip and make space.</p>
       </section>
     </main>
     <script src="/app.js" defer></script>

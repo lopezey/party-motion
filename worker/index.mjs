@@ -157,13 +157,23 @@ export class Room extends DurableObject {
         players: this.players()
       });
     } else {
-      const id = randomToken(8);
-      const name = (url.searchParams.get("name") || "Player").trim().slice(0, 18) || "Player";
-      const color = COLORS[this.ctx.getWebSockets("controller").length % COLORS.length];
-      const player = { id, name, color };
-      server.serializeAttachment({ role: "controller", player });
-      this.ctx.acceptWebSocket(server, ["controller", `player:${id}`]);
-      this.send(server, { type: "welcome", player, roomCode: room.code });
+      let resumeToken = url.searchParams.get("resume") || "";
+      const resumed = resumeToken ? await this.ctx.storage.get(`resume:${resumeToken}`) : null;
+      let player;
+      if (resumed?.player) {
+        player = resumed.player;
+        for (const oldSocket of this.ctx.getWebSockets(`player:${player.id}`)) oldSocket.close(4002, "Player reconnected");
+      } else {
+        const id = randomToken(8);
+        const name = (url.searchParams.get("name") || "Player").trim().slice(0, 18) || "Player";
+        const color = COLORS[this.ctx.getWebSockets("controller").length % COLORS.length];
+        player = { id, name, color };
+        resumeToken = randomToken(18);
+        await this.ctx.storage.put(`resume:${resumeToken}`, { player, createdAt: Date.now() });
+      }
+      server.serializeAttachment({ role: "controller", player, resumeToken });
+      this.ctx.acceptWebSocket(server, ["controller", `player:${player.id}`]);
+      this.send(server, { type: "welcome", player, roomCode: room.code, resumeToken });
       this.broadcastHosts({ type: "player_joined", player });
     }
 
@@ -190,14 +200,31 @@ export class Room extends DurableObject {
 
   async webSocketMessage(socket, rawMessage) {
     const attachment = socket.deserializeAttachment();
-    if (attachment?.role !== "controller") return;
-
     let message;
     try {
       message = JSON.parse(typeof rawMessage === "string" ? rawMessage : new TextDecoder().decode(rawMessage));
     } catch {
       return;
     }
+
+    if (attachment?.role === "host") {
+      if (message.type !== "controller_state") return;
+      const outgoing = {
+        type: "controller_state",
+        game: String(message.game || "lobby").slice(0, 24),
+        roundLabel: String(message.roundLabel || "PARTY MOTION").slice(0, 40),
+        title: String(message.title || "Get ready").slice(0, 60),
+        instructions: String(message.instructions || "Watch the shared screen.").slice(0, 180),
+        crowns: Number(message.crowns) || 0,
+        points: Number(message.points) || 0
+      };
+      const playerId = String(message.playerId || "");
+      const targets = playerId ? this.ctx.getWebSockets(`player:${playerId}`) : this.ctx.getWebSockets("controller");
+      for (const target of targets) this.send(target, outgoing);
+      return;
+    }
+
+    if (attachment?.role !== "controller") return;
 
     if (message.type === "motion") {
       this.broadcastHosts({
@@ -206,6 +233,12 @@ export class Room extends DurableObject {
         seq: Number(message.seq) || 0,
         time: Number(message.time) || Date.now(),
         tilt: [Number(message.tilt?.[0]) || 0, Number(message.tilt?.[1]) || 0],
+        acceleration: [
+          Number(message.acceleration?.[0]) || 0,
+          Number(message.acceleration?.[1]) || 0,
+          Number(message.acceleration?.[2]) || 0
+        ],
+        shake: Math.max(0, Math.min(1, Number(message.shake) || 0)),
         rotation: [
           Number(message.rotation?.[0]) || 0,
           Number(message.rotation?.[1]) || 0,
@@ -224,6 +257,9 @@ export class Room extends DurableObject {
   async webSocketClose(socket) {
     const attachment = socket.deserializeAttachment();
     if (attachment?.role === "controller") {
+      const replacements = this.ctx.getWebSockets(`player:${attachment.player.id}`)
+        .filter((candidate) => candidate !== socket && candidate.readyState === WebSocket.OPEN);
+      if (replacements.length > 0) return;
       this.broadcastHosts({ type: "player_left", playerId: attachment.player.id });
     }
   }
@@ -231,6 +267,9 @@ export class Room extends DurableObject {
   async webSocketError(socket) {
     const attachment = socket.deserializeAttachment();
     if (attachment?.role === "controller") {
+      const replacements = this.ctx.getWebSockets(`player:${attachment.player.id}`)
+        .filter((candidate) => candidate !== socket && candidate.readyState === WebSocket.OPEN);
+      if (replacements.length > 0) return;
       this.broadcastHosts({ type: "player_left", playerId: attachment.player.id });
     }
   }

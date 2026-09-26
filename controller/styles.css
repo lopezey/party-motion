@@ -43,8 +43,15 @@ header { display: flex; align-items: center; justify-content: space-between; col
 .player-card { margin: 32px 0 20px; }
 .player-card p { margin: 0; color: #78849a; font-size: .7rem; font-weight: 900; letter-spacing: .16em; }
 .player-card h2 { margin: 4px 0; font-size: 2rem; }
+.scoreline { display: flex; gap: 10px; margin-top: 10px; }
+.scoreline span { padding: 6px 10px; border-radius: 999px; background: #1d2638; color: #aab3c5; font-size: .72rem; font-weight: 900; }
+.scoreline b { color: white; }
+.game-card { padding: 16px 18px; margin-bottom: 14px; border: 1px solid #303a50; border-radius: 18px; background: rgba(23,30,46,.8); }
+.game-card > p:first-child { margin: 0; color: var(--cyan); font-size: .68rem; font-weight: 900; letter-spacing: .15em; }
+.game-card h3 { margin: 5px 0 4px; font-size: 1.35rem; }
+.game-card #gameInstruction { margin: 0; color: #aab3c5; line-height: 1.35; }
 .motion-panel {
-  position: relative; height: min(52vh, 420px); overflow: hidden; border: 1px solid #303a50; border-radius: 30px;
+  position: relative; height: min(40vh, 330px); overflow: hidden; border: 1px solid #303a50; border-radius: 30px;
   background: radial-gradient(circle, #232e43, #151c2b 65%); touch-action: none;
 }
 .crosshair { position: absolute; background: rgba(255,255,255,.08); pointer-events: none; }
@@ -55,9 +62,11 @@ header { display: flex; align-items: center; justify-content: space-between; col
   background: var(--accent); box-shadow: 0 10px 40px color-mix(in srgb, var(--accent), transparent 55%); will-change: transform;
 }
 #motionHint { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; color: #8e99ad; font-size: .82rem; }
-.actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; margin-top: 14px; }
+.motion-readout { position: absolute; left: 18px; right: 18px; top: 16px; display: grid; gap: 7px; }
+.motion-readout div { display: grid; grid-template-columns: 58px 1fr; align-items: center; gap: 8px; }
+.motion-readout span { color: #78849a; font-size: .62rem; font-weight: 900; letter-spacing: .1em; }
+.motion-readout div::after { content: ""; grid-column: 2; grid-row: 1; height: 5px; border-radius: 9px; background: #303a50; }
+.motion-readout i { position: relative; z-index: 1; grid-column: 2; grid-row: 1; display: block; width: 0%; height: 5px; border-radius: 9px; background: var(--accent); transition: width .08s linear; }
+.actions { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 14px; }
 .actions button { min-height: 58px; }
-details { margin-top: 18px; color: #8e99ad; font-size: .85rem; }
-summary { cursor: pointer; }
-.toggle { text-transform: none; letter-spacing: 0; color: #d5dae4; }
-.toggle input { width: auto; margin-right: 8px; }
+.motion-only { margin: 14px 8px 0; color: #78849a; text-align: center; font-size: .78rem; }
