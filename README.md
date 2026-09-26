@@ -1,14 +1,15 @@
 # Party Motion
 
-A working vertical slice for a no-download, phone-as-controller party game. Phones join a room in the browser, send calibrated accelerometer/gyro data over WebSockets, and steer colored players in a Godot arena.
+A motion-only, no-download party game. Phones join in the browser and use accelerometer/gyro input across a three-round Godot party session with crowns, placement points, and a final champion.
 
 ## What is included
 
-- A Godot 4 desktop host and playable tilt arena
-- A responsive phone controller with motion permission, calibration, touch fallback, wake lock, and boost button
+- A Godot 4 party host with lobby, tutorials, timed rounds, results, crowns, points, and final standings
+- Three minigames: Tilt Treasure, Shake Sprint, and Reactor Spin
+- A responsive motion-only phone controller with permission, calibration, live sensor meters, scoring, and wake lock
 - A Node.js room relay using standard WebSockets
-- Six-character room codes and generated QR codes
-- Reconnection-safe room/player messages and basic rate reduction on the controller
+- A production Cloudflare Worker relay with Durable Object rooms at `party.citradox.com`
+- Six-character room codes, generated QR codes, bidirectional controller instructions, and player resume tokens
 - Unit tests for room lifecycle behavior
 
 ## Run locally
