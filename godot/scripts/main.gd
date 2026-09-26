@@ -9,7 +9,7 @@ const CYAN := Color("58d6ff")
 const PLAYER_RADIUS := 30.0
 const MOVE_SPEED := 760.0
 
-var server_base := "http://127.0.0.1:8787"
+var server_base := "https://party.citradox.com"
 var room_code := ""
 var host_token := ""
 var join_url := ""

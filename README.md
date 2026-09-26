@@ -52,14 +52,13 @@ npm run cf:dev   # local Workers-compatible development
 npm run deploy   # deploy to Cloudflare
 ```
 
-After deployment, launch Godot with the permanent Worker or custom-domain URL:
+The Godot project uses the production relay by default:
 
 ```powershell
-$env:PARTY_RELAY_URL = "https://party.citradox.com"
 godot --path godot
 ```
 
-The original Node relay remains available through `npm start` for quick local testing. Cloudflare deployment uses `worker/index.mjs` and `wrangler.jsonc`.
+Set `PARTY_RELAY_URL` only when you want to override that default. The original Node relay remains available through `npm start` for quick local testing. Cloudflare deployment uses `worker/index.mjs` and `wrangler.jsonc`.
 
 ## Architecture
 

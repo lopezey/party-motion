@@ -25,5 +25,11 @@
   ],
   "observability": {
     "enabled": true
-  }
+  },
+  "routes": [
+    {
+      "pattern": "party.citradox.com",
+      "custom_domain": true
+    }
+  ]
 }
