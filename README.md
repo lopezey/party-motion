@@ -42,16 +42,24 @@ godot --path godot
 
 The HTTPS provider must support WebSocket upgrades. `PUBLIC_URL` determines the controller link encoded in the QR code. `PARTY_RELAY_URL` tells Godot where to create rooms and connect its host socket.
 
-## Hosted relay
+## Hosted relay on Cloudflare
 
-The included `render.yaml` deploys the Dockerized relay to Render with HTTPS, secure WebSockets, and `/health` monitoring. After deployment, launch Godot with the permanent service URL:
+The production relay runs as a Cloudflare Worker with one Durable Object per room. The controller assets, REST endpoints, QR codes, and WebSockets share one HTTPS origin.
 
 ```powershell
-$env:PARTY_RELAY_URL = "https://party-motion-lopezey.onrender.com"
+npm install
+npm run cf:dev   # local Workers-compatible development
+npm run deploy   # deploy to Cloudflare
+```
+
+After deployment, launch Godot with the permanent Worker or custom-domain URL:
+
+```powershell
+$env:PARTY_RELAY_URL = "https://party.citradox.com"
 godot --path godot
 ```
 
-If Render assigns a different hostname, use the exact URL displayed in the Render dashboard. Free Render instances may sleep when inactive, so open the controller URL once before starting a party session or move the service to an always-on instance.
+The original Node relay remains available through `npm start` for quick local testing. Cloudflare deployment uses `worker/index.mjs` and `wrangler.jsonc`.
 
 ## Architecture
 

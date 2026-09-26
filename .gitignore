@@ -3,4 +3,5 @@ node_modules/
 *.log
 .godot/
 godot/export/
-
+work/
+.wrangler/
