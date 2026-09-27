@@ -1,93 +1,132 @@
 # Party Motion
 
-A motion-only, no-download party game. Phones join in the browser and use accelerometer/gyro input across a three-round Godot party session with crowns, placement points, and a final champion.
+Party Motion is a no-download, local multiplayer party game built around phone movement. The game runs on the shared screen, while each player joins from a mobile browser and uses their phone's motion controls to control the game.
 
-## What is included
+Live phone controller: [party.citradox.com](https://party.citradox.com)
 
-- A Godot 4 party host with lobby, tutorials, timed rounds, results, crowns, points, and final standings
-- Three minigames: Tilt Treasure, Shake Sprint, and Reactor Spin
-- A responsive motion-only phone controller with permission, calibration, live sensor meters, scoring, and wake lock
-- A Node.js room relay using standard WebSockets
-- A production Cloudflare Worker relay with Durable Object rooms at `party.citradox.com`
-- Six-character room codes, generated QR codes, bidirectional controller instructions, and player resume tokens
-- Unit tests for room lifecycle behavior
+## Current prototype
 
-## Run locally
+- A Godot host application for a shared screen
+- Browser-based phone controllers with accelerometer and gyroscope input
+- QR-code and six-character room joining
+- Three minigames
+- A permanent Cloudflare Worker relay and Durable Object room service
+- A local Node.js relay for development
 
-Requirements: Node.js 20+ and Godot 4.3+.
+The desktop host remains the authority for game state and scoring. Phones send motion data and party commands.
 
-```powershell
-npm install
-npm start
-```
-
-Open `godot/project.godot` in Godot and run the project. Select **Create room**.
-
-For desktop-only UI testing, open `http://localhost:8787/?room=ROOMCODE`. A mouse or touch can drag the controller pad even when motion sensors are unavailable.
-
-## Test with real phones
-
-Motion sensor APIs require a secure HTTPS page. Deploy this server behind HTTPS or expose it through an HTTPS development tunnel, then set the public address before starting the relay:
-
-```powershell
-$env:PUBLIC_URL = "https://your-public-controller.example"
-npm start
-```
-
-Point the Godot host at the same relay:
-
-```powershell
-$env:PARTY_RELAY_URL = "https://your-public-controller.example"
-godot --path godot
-```
-
-The HTTPS provider must support WebSocket upgrades. `PUBLIC_URL` determines the controller link encoded in the QR code. `PARTY_RELAY_URL` tells Godot where to create rooms and connect its host socket.
-
-## Hosted relay on Cloudflare
-
-The production relay runs as a Cloudflare Worker with one Durable Object per room. The controller assets, REST endpoints, QR codes, and WebSockets share one HTTPS origin.
-
-```powershell
-npm install
-npm run cf:dev   # local Workers-compatible development
-npm run deploy   # deploy to Cloudflare
-```
-
-The Godot project uses the production relay by default:
-
-```powershell
-godot --path godot
-```
-
-Set `PARTY_RELAY_URL` only when you want to override that default. The original Node relay remains available through `npm start` for quick local testing. Cloudflare deployment uses `worker/index.mjs` and `wrangler.jsonc`.
-
-## Architecture
+## How it works
 
 ```text
-Phone browser(s) ── WSS ──> Node room relay <── WSS ── Godot host
-   motion + touch              room routing             game authority
+Player phones
+  browser motion sensors
+         │
+         │ HTTPS + WebSocket
+         ▼
+Cloudflare Worker at party.citradox.com
+  static controller site + one Durable Object per room
+         │
+         │ WebSocket
+         ▼
+Godot host
+  lobby + minigames + scoring + shared display
 ```
 
-The relay intentionally keeps room state in memory. Restarting it closes all rooms. For a production service with multiple relay instances, introduce shared room discovery and sticky routing before adding a database.
+## Project layout
 
-## Protocol
-
-Controllers send at most about 30 motion packets per second:
-
-```json
-{"type":"motion","seq":42,"time":1727361820123,"tilt":[0.2,-0.7],"rotation":[2.4,0.1,-1.0]}
+```text
+party-motion/
+├── controller/             Phone website frontend
+│   ├── index.html          Page structure
+│   ├── styles.css          Visual design and responsive layout
+│   └── app.js              Joining, sensors, leader UI, and WebSocket client
+├── godot/                  Shared-screen game
+│   ├── project.godot       Godot project configuration
+│   ├── main.tscn           Main scene
+│   └── scripts/main.gd     Lobby, rounds, minigames, scoring, and relay client
+├── worker/
+│   └── index.mjs           Production Cloudflare Worker and Durable Object relay
+├── server/
+│   ├── src/                Local Node.js relay
+│   └── test/               Node relay tests
+├── wrangler.jsonc          Cloudflare deployment configuration
+└── package.json            Development scripts and dependencies
 ```
 
-The relay attaches the trusted `playerId` before forwarding the packet to Godot. Controllers can also send an action:
+If you are changing the public website, start in `controller/`. If you are changing gameplay or the shared-screen interface, start in `godot/`. If you are changing rooms, connections, or authorization, inspect `worker/index.mjs`. Keep the local relay behavior in sync where appropriate.
 
-```json
-{"type":"action","action":"boost"}
+## Requirements
+
+- Node.js 20 or newer
+- npm
+- Godot 4.7 or newer
+- A modern iPhone or Android phone with motion sensors
+
+## Run the current production-backed game
+
+The Godot project uses `https://party.citradox.com` by default, so no local web server is required for a normal playtest.
+
+1. Open `godot/project.godot` in Godot.
+2. Run the project.
+3. Select **Create Room** on the shared screen.
+4. Scan the QR code with each phone or visit the displayed URL.
+5. Allow motion access and calibrate the phone when prompted.
+6. The first phone to join receives the party-leader controls.
+
+Refresh an already-open phone page after deploying controller changes so it loads the newest frontend assets.
+
+## Local development
+
+Install dependencies:
+
+```powershell
+npm install
 ```
 
-## Next milestones
+Start the local Node relay:
 
-1. Test sensor axes and permission flows across physical iPhones and Android phones.
-2. Add automatic host reconnect and short-lived controller resume tokens.
-3. Record anonymized motion traces to tune gesture recognition.
-4. Add collisions, rounds, scoring, sound, and a win condition to Tilt Arena.
-5. Extract reusable lobby and minigame interfaces after the first playtest.
+```powershell
+npm start
+```
+
+Then point Godot to it before launching Godot from the same terminal:
+
+```powershell
+$env:PARTY_RELAY_URL = "http://localhost:8787"
+godot --path godot
+```
+
+Open `http://localhost:8787/?room=ROOMCODE` to test the controller on the same computer. Mouse or touch dragging can simulate tilt for basic UI testing.
+
+Real phone motion testing requires a secure HTTPS origin because mobile browsers restrict motion sensors on insecure pages. The production Cloudflare deployment already provides HTTPS. If testing a local relay from a physical phone, use an HTTPS tunnel that supports WebSocket upgrades and set both the relay's public URL and Godot's relay URL accordingly.
+
+```powershell
+$env:PUBLIC_URL = "https://your-tunnel.example"
+npm start
+```
+
+In a second terminal:
+
+```powershell
+$env:PARTY_RELAY_URL = "https://your-tunnel.example"
+godot --path godot
+```
+
+## Cloudflare development and deployment
+
+The production service is configured in `wrangler.jsonc`. It serves the files in `controller/`, handles REST and WebSocket routes in `worker/index.mjs`, and stores each active room in a Durable Object.
+
+Run the Workers version locally:
+
+```powershell
+npm run cf:dev
+```
+
+Deploy the current branch:
+
+```powershell
+npm run deploy
+```
+
+Deployment updates the live controller and relay at `party.citradox.com`. Only deploy reviewed changes: active rooms can be interrupted by relay changes, and frontend changes become public immediately.
+
