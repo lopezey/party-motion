@@ -1,0 +1,448 @@
+[gd_scene format=3 uid="uid://dkv1wujn3d157"]
+
+[ext_resource type="Script" uid="uid://cgaacueaaujtu" path="res://party motion demo/scripts/main.gd" id="1_ai7mu"]
+[ext_resource type="Script" uid="uid://cdosa0afkj12s" path="res://party motion demo/scripts/game_definition.gd" id="2_omqeh"]
+
+[sub_resource type="StyleBoxFlat" id="SidebarStyle"]
+bg_color = Color(0.09, 0.118, 0.18, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.188, 0.227, 0.314, 1)
+
+[sub_resource type="StyleBoxFlat" id="ArenaStyle"]
+bg_color = Color(0.078, 0.106, 0.161, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.188, 0.227, 0.314, 1)
+
+[node name="Main" type="Control" unique_id=232130772]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ai7mu")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1978668126]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.063, 0.082, 0.133, 1)
+
+[node name="Sidebar" type="Panel" parent="." unique_id=1461507767]
+layout_mode = 0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 354.0
+offset_bottom = -18.0
+theme_override_styles/panel = SubResource("SidebarStyle")
+
+[node name="Title" type="Label" parent="Sidebar" unique_id=658910944]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = 326.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.969, 0.973, 0.988, 1)
+theme_override_font_sizes/font_size = 40
+text = "PARTY MOTION"
+vertical_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Sidebar" unique_id=455368092]
+layout_mode = 0
+offset_left = 23.0
+offset_top = 62.0
+offset_right = 327.0
+offset_bottom = 90.0
+theme_override_colors/font_color = Color(0.345, 0.839, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "MOTION-ONLY PARTY GAMES"
+vertical_alignment = 1
+
+[node name="Status" type="Label" parent="Sidebar" unique_id=1334867870]
+layout_mode = 0
+offset_left = 23.0
+offset_top = 114.0
+offset_right = 310.0
+offset_bottom = 148.0
+theme_override_colors/font_color = Color(0.557, 0.6, 0.678, 1)
+theme_override_font_sizes/font_size = 18
+text = "Create a room to begin"
+vertical_alignment = 1
+
+[node name="RoomCode" type="Label" parent="Sidebar" unique_id=1838077813]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 156.0
+offset_right = 310.0
+offset_bottom = 226.0
+theme_override_colors/font_color = Color(0.969, 0.973, 0.988, 1)
+theme_override_font_sizes/font_size = 52
+text = "------"
+vertical_alignment = 1
+
+[node name="JoinURL" type="Label" parent="Sidebar" unique_id=568981881]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 228.0
+offset_right = 310.0
+offset_bottom = 290.0
+theme_override_colors/font_color = Color(0.557, 0.6, 0.678, 1)
+theme_override_font_sizes/font_size = 13
+text = "Players scan the QR code
+or enter the room code"
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="QRCode" type="TextureRect" parent="Sidebar" unique_id=1375745086]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 294.0
+offset_right = 214.0
+offset_bottom = 484.0
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PrimaryButton" type="Button" parent="Sidebar" unique_id=1130853546]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 512.0
+offset_right = 294.0
+offset_bottom = 570.0
+theme_override_font_sizes/font_size = 18
+text = "CREATE ROOM"
+
+[node name="Safety" type="Label" parent="Sidebar" unique_id=1116793818]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 598.0
+offset_right = 310.0
+offset_bottom = 646.0
+theme_override_colors/font_color = Color(0.396, 0.439, 0.525, 1)
+theme_override_font_sizes/font_size = 11
+text = "Hold tight. Make space. Never throw your phone."
+autowrap_mode = 3
+
+[node name="Timer" type="Label" parent="." unique_id=1498596967]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -150.0
+offset_top = 42.0
+offset_right = -44.0
+offset_bottom = 90.0
+theme_override_font_sizes/font_size = 30
+horizontal_alignment = 2
+
+[node name="Hint" type="Label" parent="." unique_id=271443805]
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 390.0
+offset_top = -54.0
+offset_right = -42.0
+offset_bottom = -20.0
+theme_override_colors/font_color = Color(0.557, 0.6, 0.678, 1)
+theme_override_font_sizes/font_size = 16
+text = "Waiting for players…"
+horizontal_alignment = 1
+
+[node name="Arena" type="Panel" parent="." unique_id=1139432533]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 380.0
+offset_top = 112.0
+offset_right = -40.0
+offset_bottom = -78.0
+theme_override_styles/panel = SubResource("ArenaStyle")
+
+[node name="Lobby" type="Control" parent="Arena" unique_id=671090212]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Heading" type="Label" parent="Arena/Lobby" unique_id=838282703]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 860.0
+offset_bottom = 85.0
+theme_override_colors/font_color = Color(0.557, 0.6, 0.678, 1)
+theme_override_font_sizes/font_size = 22
+text = "PLAYERS"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EmptyMessage" type="Label" parent="Arena/Lobby" unique_id=1084945767]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.557, 0.6, 0.678, 1)
+theme_override_font_sizes/font_size = 26
+text = "Scan the QR code to join"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Arena/Lobby" unique_id=2066331164]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = 90.0
+offset_right = -48.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Players" type="VBoxContainer" parent="Arena/Lobby/Scroll" unique_id=1857208027]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Tutorial" type="Control" parent="Arena" unique_id=2098964100]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Verb" type="Label" parent="Arena/Tutorial" unique_id=1554538415]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 60.0
+offset_right = 805.0
+offset_bottom = 140.0
+theme_override_colors/font_color = Color(0.345, 0.839, 1, 1)
+theme_override_font_sizes/font_size = 64
+text = "TILT"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Title" type="Label" parent="Arena/Tutorial" unique_id=335145125]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 145.0
+offset_right = 805.0
+offset_bottom = 205.0
+theme_override_colors/font_color = Color(0.969, 0.973, 0.988, 1)
+theme_override_font_sizes/font_size = 36
+text = "Tilt Treasure"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Instructions" type="Label" parent="Arena/Tutorial" unique_id=2111816933]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 215.0
+offset_right = 805.0
+offset_bottom = 295.0
+theme_override_colors/font_color = Color(0.557, 0.6, 0.678, 1)
+theme_override_font_sizes/font_size = 19
+text = "Tilt your phone to steer. Collect as many glowing stars as you can."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Goal" type="Label" parent="Arena/Tutorial" unique_id=617165880]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 295.0
+offset_right = 805.0
+offset_bottom = 355.0
+theme_override_colors/font_color = Color(1, 0.82, 0.361, 1)
+theme_override_font_sizes/font_size = 22
+text = "Most stars wins"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TiltTreasure" type="Control" parent="Arena" unique_id=426633272]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Target" type="Sprite2D" parent="Arena/TiltTreasure" unique_id=1379225224]
+position = Vector2(430, 260)
+
+[node name="Players" type="Node2D" parent="Arena/TiltTreasure" unique_id=622674973]
+
+[node name="PreviewPlayer" parent="Arena/TiltTreasure/Players" unique_id=51965160]
+position = Vector2(250, 200)
+
+[node name="ShakeSprint" type="Control" parent="Arena" unique_id=490977821]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Heading" type="Label" parent="Arena/ShakeSprint" unique_id=1499388074]
+layout_mode = 0
+offset_top = 18.0
+offset_right = 860.0
+offset_bottom = 73.0
+theme_override_colors/font_color = Color(0.345, 0.839, 1, 1)
+theme_override_font_sizes/font_size = 25
+text = "SHAKE TO RUN"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Arena/ShakeSprint" unique_id=838809280]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = 90.0
+offset_right = -48.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Players" type="VBoxContainer" parent="Arena/ShakeSprint/Scroll" unique_id=1935620197]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PreviewPlayer" parent="Arena/ShakeSprint/Scroll/Players" unique_id=1452028277]
+layout_mode = 2
+
+[node name="ReactorSpin" type="Control" parent="Arena" unique_id=1691300695]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Heading" type="Label" parent="Arena/ReactorSpin" unique_id=1863633284]
+layout_mode = 0
+offset_top = 18.0
+offset_right = 860.0
+offset_bottom = 73.0
+theme_override_colors/font_color = Color(0.345, 0.839, 1, 1)
+theme_override_font_sizes/font_size = 25
+text = "ROTATE TO CHARGE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Arena/ReactorSpin" unique_id=41260806]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = 90.0
+offset_right = -48.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Players" type="GridContainer" parent="Arena/ReactorSpin/Scroll" unique_id=1033129487]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 3
+
+[node name="PreviewPlayer" parent="Arena/ReactorSpin/Scroll/Players" unique_id=1631045637]
+layout_mode = 2
+
+[node name="Standings" type="Control" parent="Arena" unique_id=1664450434]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Heading" type="Label" parent="Arena/Standings" unique_id=199568967]
+layout_mode = 0
+offset_top = 18.0
+offset_right = 860.0
+offset_bottom = 73.0
+theme_override_colors/font_color = Color(1, 0.82, 0.361, 1)
+theme_override_font_sizes/font_size = 25
+text = "ROUND COMPLETE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Arena/Standings" unique_id=2119037811]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = 90.0
+offset_right = -48.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Players" type="VBoxContainer" parent="Arena/Standings/Scroll" unique_id=1274939940]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="PreviewPlayer" parent="Arena/Standings/Scroll/Players" unique_id=57636563]
+layout_mode = 2
+
+[node name="GameDefinitions" type="Node" parent="." unique_id=2098575257]
+
+[node name="TiltTreasure" type="Node" parent="GameDefinitions" unique_id=915794150]
+script = ExtResource("2_omqeh")
+
+[node name="ShakeSprint" type="Node" parent="GameDefinitions" unique_id=1050190075]
+script = ExtResource("2_omqeh")
+game_id = "shake"
+title = "Shake Sprint"
+verb = "SHAKE"
+instructions = "Shake your phone in short, steady strokes to race toward the finish."
+goal = "First to the finish wins"
+
+[node name="ReactorSpin" type="Node" parent="GameDefinitions" unique_id=70062424]
+script = ExtResource("2_omqeh")
+game_id = "rotate"
+title = "Reactor Spin"
+verb = "ROTATE"
+instructions = "Rotate and twist your phone back and forth to charge your reactor."
+goal = "First full reactor wins"
+
+[node name="RoomRequest" type="HTTPRequest" parent="." unique_id=757478278]
+
+[node name="QRRequest" type="HTTPRequest" parent="." unique_id=1237040436]
+
+[connection signal="pressed" from="Sidebar/PrimaryButton" to="." method="_on_primary_button"]
+[connection signal="request_completed" from="RoomRequest" to="." method="_on_room_created"]
+[connection signal="request_completed" from="QRRequest" to="." method="_on_qr_loaded"]

@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://gklwamqwle1a"]
+
+[ext_resource type="Texture2D" uid="uid://ckgte0r65a2ia" path="res://party motion demo/assets/player.svg" id="1_a7x8f"]
+
+[node name="PlayerToken" type="Node2D" unique_id=805451182]
+
+[node name="Body" type="Sprite2D" parent="." unique_id=2058138300]
+texture = ExtResource("1_a7x8f")
+offset = Vector2(0, 4)
+
+[node name="Name" type="Label" parent="." unique_id=1561739212]
+offset_left = -70.0
+offset_top = -58.0
+offset_right = 70.0
+offset_bottom = -34.0
+theme_override_colors/font_color = Color(0.969, 0.973, 0.988, 1)
+theme_override_font_sizes/font_size = 15
+text = "Player  0"
+horizontal_alignment = 1
+vertical_alignment = 1

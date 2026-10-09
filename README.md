@@ -42,8 +42,10 @@ party-motion/
 │   └── app.js              Joining, sensors, leader UI, and WebSocket client
 ├── godot/                  Shared-screen game
 │   ├── project.godot       Godot project configuration
-│   ├── main.tscn           Main scene
-│   └── scripts/main.gd     Lobby, rounds, minigames, scoring, and relay client
+│   ├── main.tscn           Editable UI and minigame screen nodes
+│   ├── scenes/             Reusable player tokens, rows, and reactor visuals
+│   ├── assets/             Player, treasure, and reactor artwork
+│   └── scripts/            Gameplay, relay client, and Inspector game definitions
 ├── worker/
 │   └── index.mjs           Production Cloudflare Worker and Durable Object relay
 ├── server/
@@ -54,6 +56,23 @@ party-motion/
 ```
 
 If you are changing the public website, start in `controller/`. If you are changing gameplay or the shared-screen interface, start in `godot/`. If you are changing rooms, connections, or authorization, inspect `worker/index.mjs`. Keep the local relay behavior in sync where appropriate.
+
+## Edit the game in Godot
+
+Open `main.tscn` and select the **2D** workspace. The Scene tree now contains the actual interface:
+
+- **Sidebar**: title, room code, join URL, QR display, and primary button. Select a node to edit its text, position, size, or theme overrides.
+- **Arena**: Lobby, Tutorial, TiltTreasure, ShakeSprint, ReactorSpin, and Standings. Use the visibility eye beside Lobby to hide it, then enable the screen you want to work on. The running game chooses the screen automatically.
+- **GameDefinitions**: select a round to change its title, instructions, verb, and goal in the Inspector. These values feed both the shared display and phone controllers.
+- **Main**: edit relay URL, round duration, movement speed, player radius, and the reusable player scene references in the Inspector.
+
+Open the scenes in `godot/scenes/` to edit the player token, player row, race-row preview, or reactor. The game instantiates those saved scenes for joined players. Example instances named **PreviewPlayer** show these visuals in the editor and are removed at runtime; make reusable visual changes in the source scenes. Scripts still handle motion input, networking, scoring, and screen state.
+
+To check the scene flow without phones:
+
+```powershell
+godot --headless --path godot --script res://tests/scene_smoke.gd
+```
 
 ## Requirements
 

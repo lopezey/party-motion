@@ -2,61 +2,52 @@ extends Control
 
 enum Phase { LOBBY, TUTORIAL, PLAYING, RESULTS, FINAL }
 
-const BG := Color("101522")
-const PANEL := Color("171e2e")
-const PANEL_EDGE := Color("303a50")
 const TEXT := Color("f7f8fc")
 const MUTED := Color("8e99ad")
 const CYAN := Color("58d6ff")
 const GOLD := Color("ffd15c")
-const PLAYER_RADIUS := 28.0
-const MOVE_SPEED := 700.0
-const ROUND_SECONDS := 25.0
-const GAMES := [
-	{
-		"id": "tilt",
-		"title": "Tilt Treasure",
-		"verb": "TILT",
-		"instructions": "Tilt your phone to steer. Collect as many glowing stars as you can.",
-		"goal": "Most stars wins"
-	},
-	{
-		"id": "shake",
-		"title": "Shake Sprint",
-		"verb": "SHAKE",
-		"instructions": "Shake your phone in short, steady strokes to race toward the finish.",
-		"goal": "First to the finish wins"
-	},
-	{
-		"id": "rotate",
-		"title": "Reactor Spin",
-		"verb": "ROTATE",
-		"instructions": "Rotate and twist your phone back and forth to charge your reactor.",
-		"goal": "First full reactor wins"
-	}
-]
 
-var server_base := "https://party.citradox.com"
+@export_group("Relay")
+@export var server_base := "https://party.citradox.com"
+@export_group("Gameplay")
+@export_range(1.0, 120.0) var round_seconds := 25.0
+@export_range(100.0, 1500.0) var move_speed := 700.0
+@export_range(10.0, 60.0) var player_radius := 28.0
+@export_group("Player Scenes")
+@export var player_row_scene: PackedScene = preload("res://scenes/player_row.tscn")
+@export var player_token_scene: PackedScene = preload("res://scenes/player_token.tscn")
+@export var reactor_scene: PackedScene = preload("res://scenes/reactor.tscn")
+
+var games: Array[Dictionary] = []
+var player_views: Dictionary = {}
+@onready var arena: Control = $Arena
+@onready var lobby: Control = $Arena/Lobby
+@onready var tutorial: Control = $Arena/Tutorial
+@onready var tilt_game: Control = $Arena/TiltTreasure
+@onready var shake_game: Control = $Arena/ShakeSprint
+@onready var rotate_game: Control = $Arena/ReactorSpin
+@onready var standings: Control = $Arena/Standings
+
 var room_code := ""
 var host_token := ""
 var join_url := ""
 var socket := WebSocketPeer.new()
 var players: Dictionary = {}
-var room_request: HTTPRequest
-var qr_request: HTTPRequest
-var title_label: Label
-var subtitle_label: Label
-var status_label: Label
-var room_label: Label
-var join_label: Label
-var start_button: Button
-var qr_rect: TextureRect
-var hint_label: Label
-var timer_label: Label
+@onready var room_request: HTTPRequest = $RoomRequest
+@onready var qr_request: HTTPRequest = $QRRequest
+@onready var title_label: Label = $Sidebar/Title
+@onready var subtitle_label: Label = $Sidebar/Subtitle
+@onready var status_label: Label = $Sidebar/Status
+@onready var room_label: Label = $Sidebar/RoomCode
+@onready var join_label: Label = $Sidebar/JoinURL
+@onready var start_button: Button = $Sidebar/PrimaryButton
+@onready var qr_rect: TextureRect = $Sidebar/QRCode
+@onready var hint_label: Label = $Hint
+@onready var timer_label: Label = $Timer
 var connected := false
 var phase := Phase.LOBBY
 var current_game_index := 0
-var round_time := ROUND_SECONDS
+var round_time := 0.0
 var join_counter := 0
 var target_position := Vector2.ZERO
 var last_rankings: Array = []
@@ -69,91 +60,16 @@ func _ready() -> void:
 	if not configured_url.is_empty():
 		server_base = configured_url.trim_suffix("/")
 	rng.randomize()
-	build_interface()
-	room_request = HTTPRequest.new()
-	add_child(room_request)
-	room_request.request_completed.connect(_on_room_created)
-	qr_request = HTTPRequest.new()
-	add_child(qr_request)
-	qr_request.request_completed.connect(_on_qr_loaded)
-	queue_redraw()
-
-
-func build_interface() -> void:
-	title_label = make_label("PARTY MOTION", 40, TEXT)
-	title_label.position = Vector2(44, 28)
-	title_label.size = Vector2(400, 60)
-	add_child(title_label)
-
-	subtitle_label = make_label("MOTION-ONLY PARTY GAMES", 14, CYAN)
-	subtitle_label.position = Vector2(47, 80)
-	subtitle_label.size = Vector2(500, 28)
-	add_child(subtitle_label)
-
-	status_label = make_label("Create a room to begin", 18, MUTED)
-	status_label.position = Vector2(47, 132)
-	status_label.size = Vector2(310, 34)
-	add_child(status_label)
-
-	room_label = make_label("------", 52, TEXT)
-	room_label.position = Vector2(46, 174)
-	room_label.size = Vector2(300, 70)
-	room_label.add_theme_constant_override("outline_size", 10)
-	room_label.add_theme_color_override("font_outline_color", BG)
-	add_child(room_label)
-
-	join_label = make_label("Players scan the QR code\nor enter the room code", 13, MUTED)
-	join_label.position = Vector2(48, 246)
-	join_label.size = Vector2(294, 62)
-	join_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(join_label)
-
-	qr_rect = TextureRect.new()
-	qr_rect.position = Vector2(48, 312)
-	qr_rect.size = Vector2(190, 190)
-	qr_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	qr_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	add_child(qr_rect)
-
-	start_button = Button.new()
-	start_button.text = "CREATE ROOM"
-	start_button.position = Vector2(48, 530)
-	start_button.size = Vector2(270, 58)
-	start_button.add_theme_font_size_override("font_size", 18)
-	start_button.pressed.connect(_on_primary_button)
-	add_child(start_button)
-
-	var safety := make_label("Hold tight. Make space. Never throw your phone.", 11, Color("657086"))
-	safety.position = Vector2(48, 616)
-	safety.size = Vector2(290, 48)
-	safety.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(safety)
-
-	timer_label = make_label("", 30, TEXT)
-	timer_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	timer_label.offset_left = -150
-	timer_label.offset_right = -44
-	timer_label.offset_top = 42
-	timer_label.offset_bottom = 90
-	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	add_child(timer_label)
-
-	hint_label = make_label("Waiting for players…", 16, MUTED)
-	hint_label.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	hint_label.offset_left = 390
-	hint_label.offset_right = -42
-	hint_label.offset_top = -54
-	hint_label.offset_bottom = -20
-	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(hint_label)
-
-
-func make_label(value: String, font_size: int, color: Color) -> Label:
-	var label := Label.new()
-	label.text = value
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	return label
+	for definition in $GameDefinitions.get_children():
+		games.append(definition.as_dictionary())
+	# Saved example instances make the other screens visible when editing.
+	# Real players use the same scenes once they join.
+	for container in [tilt_game.get_node("Players"), shake_game.get_node("Scroll/Players"), rotate_game.get_node("Scroll/Players"), standings.get_node("Scroll/Players")]:
+		for preview in container.get_children():
+			if preview.name == "PreviewPlayer":
+				container.remove_child(preview)
+				preview.queue_free()
+	refresh_visuals()
 
 
 func _on_primary_button() -> void:
@@ -230,7 +146,7 @@ func _process(delta: float) -> void:
 		update_minigame(delta)
 		if round_time <= 0.0 and phase == Phase.PLAYING:
 			end_round()
-	queue_redraw()
+	refresh_visuals()
 
 
 func poll_socket() -> void:
@@ -280,10 +196,10 @@ func handle_party_command(command: String) -> void:
 			if phase == Phase.TUTORIAL:
 				start_round()
 		"next_round":
-			if phase == Phase.RESULTS and current_game_index < GAMES.size() - 1:
+			if phase == Phase.RESULTS and current_game_index < games.size() - 1:
 				advance_after_results()
 		"show_final":
-			if phase == Phase.RESULTS and current_game_index == GAMES.size() - 1:
+			if phase == Phase.RESULTS and current_game_index == games.size() - 1:
 				advance_after_results()
 		"play_again":
 			if phase == Phase.FINAL:
@@ -376,13 +292,13 @@ func start_party() -> void:
 
 
 func current_game() -> Dictionary:
-	return GAMES[current_game_index]
+	return games[current_game_index]
 
 
 func show_tutorial() -> void:
 	phase = Phase.TUTORIAL
 	var game := current_game()
-	subtitle_label.text = "ROUND %d OF %d  /  %s" % [current_game_index + 1, GAMES.size(), game["verb"]]
+	subtitle_label.text = "ROUND %d OF %d  /  %s" % [current_game_index + 1, games.size(), game["verb"]]
 	timer_label.text = ""
 	hint_label.text = game["goal"]
 	start_button.text = "START ROUND"
@@ -392,7 +308,7 @@ func show_tutorial() -> void:
 
 func start_round() -> void:
 	phase = Phase.PLAYING
-	round_time = ROUND_SECONDS
+	round_time = round_seconds
 	for id in players.keys():
 		var player: Dictionary = players[id]
 		player["round_score"] = 0.0
@@ -418,17 +334,17 @@ func update_minigame(delta: float) -> void:
 
 
 func update_tilt_game(delta: float) -> void:
-	var bounds := arena_rect().grow(-PLAYER_RADIUS)
+	var bounds := arena_rect().grow(-player_radius)
 	for id in players.keys():
 		var player: Dictionary = players[id]
 		if not player["connected"]:
 			continue
-		player["velocity"] = player["velocity"].lerp(player["tilt"] * MOVE_SPEED, 1.0 - exp(-delta * 5.0))
+		player["velocity"] = player["velocity"].lerp(player["tilt"] * move_speed, 1.0 - exp(-delta * 5.0))
 		var position: Vector2 = player["position"] + player["velocity"] * delta
 		position.x = clamp(position.x, bounds.position.x, bounds.end.x)
 		position.y = clamp(position.y, bounds.position.y, bounds.end.y)
 		player["position"] = position
-		if position.distance_to(target_position) < PLAYER_RADIUS + 22.0:
+		if position.distance_to(target_position) < player_radius + 22.0:
 			player["round_score"] += 1.0
 			spawn_target()
 		players[id] = player
@@ -488,13 +404,13 @@ func end_round() -> void:
 		players[id] = player
 	subtitle_label.text = "ROUND %d RESULTS" % (current_game_index + 1)
 	hint_label.text = "%s takes the crown!" % players[last_rankings[0]]["name"] if not last_rankings.is_empty() else "Round complete"
-	start_button.text = "FINAL RESULTS" if current_game_index == GAMES.size() - 1 else "NEXT ROUND"
+	start_button.text = "FINAL RESULTS" if current_game_index == games.size() - 1 else "NEXT ROUND"
 	start_button.disabled = false
 	sync_all_controllers()
 
 
 func advance_after_results() -> void:
-	if current_game_index < GAMES.size() - 1:
+	if current_game_index < games.size() - 1:
 		current_game_index += 1
 		show_tutorial()
 	else:
@@ -541,7 +457,7 @@ func sync_controller(id: String) -> void:
 	match phase:
 		Phase.TUTORIAL:
 			game_id = current_game()["id"]
-			round_label = "ROUND %d OF %d" % [current_game_index + 1, GAMES.size()]
+			round_label = "ROUND %d OF %d" % [current_game_index + 1, games.size()]
 			heading = current_game()["title"]
 			instructions = current_game()["instructions"]
 			host_command = "start_round"
@@ -560,8 +476,8 @@ func sync_controller(id: String) -> void:
 			round_label = "ROUND RESULTS"
 			heading = "Score: %s" % score_text(player["round_score"])
 			instructions = "Watch the shared screen for the standings."
-			host_command = "show_final" if current_game_index == GAMES.size() - 1 else "next_round"
-			host_button_label = "FINAL RESULTS" if current_game_index == GAMES.size() - 1 else "NEXT ROUND"
+			host_command = "show_final" if current_game_index == games.size() - 1 else "next_round"
+			host_button_label = "FINAL RESULTS" if current_game_index == games.size() - 1 else "NEXT ROUND"
 			host_button_enabled = true
 		Phase.FINAL:
 			game_id = "final"
@@ -598,117 +514,88 @@ func show_error(message: String) -> void:
 
 
 func arena_rect() -> Rect2:
-	return Rect2(Vector2(380, 112), Vector2(maxf(560.0, size.x - 420.0), maxf(460.0, size.y - 190.0)))
+	return Rect2(arena.position, arena.size)
 
 
-func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), BG)
-	draw_rect(Rect2(Vector2(24, 18), Vector2(330, size.y - 36)), PANEL, true)
-	draw_rect(Rect2(Vector2(24, 18), Vector2(330, size.y - 36)), PANEL_EDGE, false, 1.0)
-	var arena := arena_rect()
-	draw_rect(arena, Color("141b29"), true)
-	draw_rect(arena, PANEL_EDGE, false, 2.0)
-	match phase:
-		Phase.LOBBY:
-			draw_lobby(arena)
-		Phase.TUTORIAL:
-			draw_tutorial(arena)
-		Phase.PLAYING:
-			draw_active_game(arena)
-		Phase.RESULTS:
-			draw_standings(arena, last_rankings, "ROUND COMPLETE")
-		Phase.FINAL:
-			draw_standings(arena, final_rankings, "PARTY CHAMPION")
+func ensure_player_views(id: String) -> Dictionary:
+	if player_views.has(id):
+		return player_views[id]
+	var views := {}
+	for screen in [lobby, shake_game, standings]:
+		var row := player_row_scene.instantiate()
+		row.name = "Player_" + id
+		screen.get_node("Scroll/Players").add_child(row)
+		views[screen.name] = row
+	var token := player_token_scene.instantiate()
+	token.name = "Player_" + id
+	tilt_game.get_node("Players").add_child(token)
+	views["token"] = token
+	var reactor := reactor_scene.instantiate()
+	reactor.name = "Player_" + id
+	rotate_game.get_node("Scroll/Players").add_child(reactor)
+	views["reactor"] = reactor
+	player_views[id] = views
+	return views
 
 
-func draw_lobby(arena: Rect2) -> void:
-	draw_centered("PLAYERS", arena.position.y + 62, 22, MUTED)
-	var index := 0
-	for player in players.values():
-		var y := arena.position.y + 112 + index * 62
-		draw_circle(Vector2(arena.position.x + 110, y), 18, player["color"])
-		draw_string(ThemeDB.fallback_font, Vector2(arena.position.x + 145, y + 7), player["name"], HORIZONTAL_ALIGNMENT_LEFT, -1, 22, TEXT if player["connected"] else MUTED)
-		draw_string(ThemeDB.fallback_font, Vector2(arena.end.x - 160, y + 6), "READY" if player["connected"] else "OFFLINE", HORIZONTAL_ALIGNMENT_RIGHT, 120, 14, CYAN if player["connected"] else MUTED)
-		index += 1
-	if players.is_empty():
-		draw_centered("Scan the QR code to join", arena.get_center().y, 26, MUTED)
-
-
-func draw_tutorial(arena: Rect2) -> void:
-	var game := current_game()
-	draw_centered(game["verb"], arena.position.y + 120, 64, CYAN)
-	draw_centered(game["title"], arena.position.y + 195, 36, TEXT)
-	draw_centered(game["instructions"], arena.position.y + 260, 19, MUTED)
-	draw_centered(game["goal"], arena.position.y + 330, 22, GOLD)
-
-
-func draw_active_game(arena: Rect2) -> void:
-	match current_game()["id"]:
-		"tilt":
-			draw_tilt_game(arena)
-		"shake":
-			draw_progress_race(arena, 10.0, "SHAKE TO RUN")
-		"rotate":
-			draw_reactors(arena)
-
-
-func draw_tilt_game(arena: Rect2) -> void:
-	for x in range(int(arena.position.x) + 40, int(arena.end.x), 80):
-		draw_line(Vector2(x, arena.position.y), Vector2(x, arena.end.y), Color(1, 1, 1, 0.025), 1.0)
-	for y in range(int(arena.position.y) + 40, int(arena.end.y), 80):
-		draw_line(Vector2(arena.position.x, y), Vector2(arena.end.x, y), Color(1, 1, 1, 0.025), 1.0)
-	draw_circle(target_position, 30, Color(GOLD, 0.16))
-	draw_circle(target_position, 17, GOLD)
-	for player in players.values():
-		if not player["connected"]:
-			continue
-		var position: Vector2 = player["position"]
-		draw_circle(position + Vector2(0, 6), PLAYER_RADIUS, Color(0, 0, 0, 0.25))
-		draw_circle(position, PLAYER_RADIUS, player["color"])
-		draw_string(ThemeDB.fallback_font, position + Vector2(-42, -38), "%s  %d" % [player["name"], int(player["round_score"])], HORIZONTAL_ALIGNMENT_CENTER, 84, 15, TEXT)
-
-
-func draw_progress_race(arena: Rect2, goal: float, heading: String) -> void:
-	draw_centered(heading, arena.position.y + 52, 21, CYAN)
-	var ids := ranked_player_ids()
-	for index in range(ids.size()):
-		var player: Dictionary = players[ids[index]]
-		var y := arena.position.y + 105 + index * 76
-		var track := Rect2(Vector2(arena.position.x + 120, y), Vector2(arena.size.x - 210, 22))
-		draw_string(ThemeDB.fallback_font, Vector2(arena.position.x + 24, y + 18), player["name"], HORIZONTAL_ALIGNMENT_LEFT, 88, 15, TEXT)
-		draw_rect(track, PANEL_EDGE, true)
-		draw_rect(Rect2(track.position, Vector2(track.size.x * clampf(player["round_score"] / goal, 0.0, 1.0), track.size.y)), player["color"], true)
-		draw_circle(Vector2(track.position.x + track.size.x * clampf(player["round_score"] / goal, 0.0, 1.0), y + 11), 16, player["color"].lightened(0.2))
-
-
-func draw_reactors(arena: Rect2) -> void:
-	draw_centered("ROTATE TO CHARGE", arena.position.y + 52, 21, CYAN)
-	var ids := ranked_player_ids()
-	var columns := maxi(1, mini(3, ids.size()))
-	for index in range(ids.size()):
-		var player: Dictionary = players[ids[index]]
-		var column := index % columns
-		var row := index / columns
-		var center := Vector2(arena.position.x + arena.size.x * (float(column) + 0.5) / columns, arena.position.y + 175 + row * 190)
-		var ratio: float = clampf(player["round_score"] / 12.0, 0.0, 1.0)
-		draw_circle(center, 64, Color(1, 1, 1, 0.04))
-		draw_arc(center, 64, -PI / 2.0, -PI / 2.0 + TAU * ratio, 64, player["color"], 12.0, true)
-		draw_string(ThemeDB.fallback_font, center + Vector2(-70, 6), "%d%%" % int(ratio * 100.0), HORIZONTAL_ALIGNMENT_CENTER, 140, 25, TEXT)
-		draw_string(ThemeDB.fallback_font, center + Vector2(-70, 92), player["name"], HORIZONTAL_ALIGNMENT_CENTER, 140, 17, TEXT)
-
-
-func draw_standings(arena: Rect2, rankings: Array, heading: String) -> void:
-	draw_centered(heading, arena.position.y + 60, 25, GOLD)
+func refresh_visuals() -> void:
+	lobby.visible = phase == Phase.LOBBY
+	tutorial.visible = phase == Phase.TUTORIAL
+	tilt_game.visible = phase == Phase.PLAYING and current_game()["id"] == "tilt"
+	shake_game.visible = phase == Phase.PLAYING and current_game()["id"] == "shake"
+	rotate_game.visible = phase == Phase.PLAYING and current_game()["id"] == "rotate"
+	standings.visible = phase == Phase.RESULTS or phase == Phase.FINAL
+	lobby.get_node("EmptyMessage").visible = players.is_empty()
+	if tutorial.visible:
+		var game := current_game()
+		tutorial.get_node("Verb").text = game["verb"]
+		tutorial.get_node("Title").text = game["title"]
+		tutorial.get_node("Instructions").text = game["instructions"]
+		tutorial.get_node("Goal").text = game["goal"]
+	tilt_game.get_node("Target").position = target_position - arena.position
+	standings.get_node("Heading").text = "PARTY CHAMPION" if phase == Phase.FINAL else "ROUND COMPLETE"
+	for id in players:
+		var player: Dictionary = players[id]
+		var views := ensure_player_views(id)
+		for screen_name in ["Lobby", "ShakeSprint", "Standings"]:
+			var row: HBoxContainer = views[screen_name]
+			row.get_node("Name").text = player["name"]
+			row.get_node("Name").modulate = TEXT if player["connected"] else MUTED
+			row.get_node("Swatch").color = player["color"]
+			row.get_node("Progress").visible = screen_name == "ShakeSprint"
+			row.get_node("Progress").value = clampf(player["round_score"] / 10.0, 0.0, 1.0) * 100.0
+			row.get_node("Progress").modulate = player["color"]
+			if screen_name == "Lobby":
+				row.get_node("Detail").text = "READY" if player["connected"] else "OFFLINE"
+				row.get_node("Detail").modulate = CYAN if player["connected"] else MUTED
+			elif screen_name == "Standings":
+				row.get_node("Detail").text = "♛ %d    %d PTS" % [player["crowns"], player["points"]]
+				row.get_node("Detail").modulate = GOLD
+			else:
+				row.get_node("Detail").text = "%d%%" % int(clampf(player["round_score"] / 10.0, 0.0, 1.0) * 100.0)
+		var token: Node2D = views["token"]
+		token.visible = player["connected"]
+		token.position = player["position"] - arena.position
+		token.get_node("Body").modulate = player["color"]
+		token.get_node("Body").scale = Vector2.ONE * player_radius / 28.0
+		token.get_node("Name").text = "%s  %d" % [player["name"], int(player["round_score"])]
+		var reactor: VBoxContainer = views["reactor"]
+		var ratio := clampf(player["round_score"] / 12.0, 0.0, 1.0)
+		reactor.get_node("Name").text = player["name"]
+		reactor.get_node("Gauge/Ring").modulate = player["color"]
+		reactor.get_node("Gauge/Charge").modulate = player["color"]
+		reactor.get_node("Gauge/Charge").value = ratio * 100.0
+		reactor.get_node("Gauge/Percent").text = "%d%%" % int(ratio * 100.0)
+	var rankings := final_rankings if phase == Phase.FINAL else last_rankings
 	for index in range(rankings.size()):
-		var player: Dictionary = players[rankings[index]]
-		var y := arena.position.y + 115 + index * 72
-		var row := Rect2(Vector2(arena.position.x + 70, y), Vector2(arena.size.x - 140, 54))
-		draw_rect(row, Color(player["color"], 0.11), true)
-		draw_string(ThemeDB.fallback_font, Vector2(row.position.x + 18, y + 36), "%d" % (index + 1), HORIZONTAL_ALIGNMENT_LEFT, 42, 25, player["color"])
-		draw_string(ThemeDB.fallback_font, Vector2(row.position.x + 68, y + 34), player["name"], HORIZONTAL_ALIGNMENT_LEFT, 260, 21, TEXT)
-		draw_string(ThemeDB.fallback_font, Vector2(row.end.x - 250, y + 34), "♛ %d    %d PTS" % [player["crowns"], player["points"]], HORIZONTAL_ALIGNMENT_RIGHT, 230, 18, GOLD)
-
-
-func draw_centered(value: String, y: float, font_size: int, color: Color) -> void:
-	var arena := arena_rect()
-	draw_string(ThemeDB.fallback_font, Vector2(arena.position.x, y), value, HORIZONTAL_ALIGNMENT_CENTER, arena.size.x, font_size, color)
+		var row: HBoxContainer = player_views[rankings[index]]["Standings"]
+		row.get_node("Name").text = "%d.  %s" % [index + 1, players[rankings[index]]["name"]]
+		row.get_parent().move_child(row, index)
+	if shake_game.visible or rotate_game.visible:
+		var ids := ranked_player_ids()
+		for index in range(ids.size()):
+			var views: Dictionary = player_views[ids[index]]
+			var row: Node = views["ShakeSprint"]
+			row.get_parent().move_child(row, index)
+			var reactor: Node = views["reactor"]
+			reactor.get_parent().move_child(reactor, index)

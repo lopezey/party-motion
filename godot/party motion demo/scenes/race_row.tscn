@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://cglxr5guvsk8j"]
+
+[ext_resource type="PackedScene" path="res://party motion demo/scenes/player_row.tscn" id="1_kh2ow"]
+
+[node name="RaceRow" unique_id=1863255772 instance=ExtResource("1_kh2ow")]
+
+[node name="Progress" parent="." index="2"]
+visible = true
+
+[node name="Detail" parent="." index="3"]
+text = "35%"
