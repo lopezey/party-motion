@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://cpurul2kxxkem"]
+
+[ext_resource type="Script" uid="uid://u743a74h8cmt" path="res://party motion/scripts/munch_snack.gd" id="1"]
+
+[sub_resource type="CircleShape2D" id="Snack"]
+radius = 16.0
+
+[node name="MunchSnack" type="Area2D" unique_id=12048453]
+collision_layer = 0
+script = ExtResource("1")
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=792869650]
+shape = SubResource("Snack")

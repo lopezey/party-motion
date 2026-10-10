@@ -1,0 +1,291 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://party motion/scripts/motion_munch.gd" id="5_game"]
+
+[sub_resource type="SystemFont" id="DisplayFont"]
+font_names = PackedStringArray("Arial Black", "Arial")
+font_weight = 900
+subpixel_positioning = 0
+
+[sub_resource type="StyleBoxFlat" id="Play"]
+bg_color = Color(0.08, 0.14, 0.13, 1)
+border_width_bottom = 5
+border_color = Color(0.05, 0.09, 0.08, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="PlayHover"]
+bg_color = Color(0.16, 0.29, 0.24, 1)
+border_width_bottom = 5
+border_color = Color(0.05, 0.09, 0.08, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="Focus"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.91, 0.41, 0.61, 1)
+
+
+[node name="MotionMunch" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_game")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1429308302]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(8.4228816e-08, 0.08084064, 0.028473623, 1)
+
+
+[node name="Arena" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_right = -48.0
+offset_top = 188.0
+offset_bottom = -66.0
+mouse_filter = 2
+
+[node name="Field" type="ColorRect" parent="Arena"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.06, 0.15, 0.12, 1)
+
+[node name="Snacks" type="Node2D" parent="Arena"]
+
+[node name="Players" type="Node2D" parent="Arena"]
+
+[node name="Tutorial" type="Control" parent="Arena"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Heading" type="Label" parent="Arena/Tutorial"]
+anchor_right = 1.0
+offset_left = 30.0
+offset_top = 42.0
+offset_right = -30.0
+offset_bottom = 96.0
+theme_override_fonts/font = SubResource("DisplayFont")
+theme_override_font_sizes/font_size = 34
+theme_override_colors/font_color = Color(0.94, 0.54, 0.7, 1)
+text = "TILT. MUNCH. REPEAT."
+horizontal_alignment = 1
+
+[node name="Instructions" type="Label" parent="Arena/Tutorial"]
+anchor_right = 1.0
+offset_left = 40.0
+offset_top = 125.0
+offset_right = -40.0
+offset_bottom = 285.0
+theme_override_font_sizes/font_size = 22
+text = "Hold your phone flat and tap Calibrate.\nTilt to steer your wobbly avatar.\nCollect the lime snacks before time runs out.\nMost snacks wins!"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Goal" type="Label" parent="Arena/Tutorial"]
+anchor_right = 1.0
+offset_left = 30.0
+offset_top = 325.0
+offset_right = -30.0
+offset_bottom = 370.0
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.25, 0.88, 0.78, 1)
+text = "Your party leader starts the round on their phone."
+horizontal_alignment = 1
+
+[node name="Countdown" type="Label" parent="Arena"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_font_sizes/font_size = 38
+theme_override_fonts/font = SubResource("DisplayFont")
+theme_override_colors/font_color = Color(0.94, 0.54, 0.7, 1)
+text = "3"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Results" type="Control" parent="Arena"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Heading" type="Label" parent="Arena/Results"]
+anchor_right = 1.0
+offset_left = 30.0
+offset_top = 20.0
+offset_right = -30.0
+offset_bottom = 70.0
+theme_override_fonts/font = SubResource("DisplayFont")
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.94, 0.54, 0.7, 1)
+text = "NICE MUNCHING!"
+horizontal_alignment = 1
+
+[node name="Winner" type="Label" parent="Arena/Results"]
+anchor_right = 1.0
+offset_left = 30.0
+offset_top = 78.0
+offset_right = -30.0
+offset_bottom = 138.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.72, 0.93, 0.45, 1)
+horizontal_alignment = 1
+autowrap_mode = 3
+text_overrun_behavior = 3
+
+[node name="ScoreScroll" type="ScrollContainer" parent="Arena/Results"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 152.0
+offset_right = -40.0
+offset_bottom = -24.0
+horizontal_scroll_mode = 0
+
+[node name="Scores" type="Label" parent="Arena/Results/ScoreScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+horizontal_alignment = 1
+
+
+
+[node name="Tag" type="Label" parent="."]
+offset_left = 48.0
+offset_top = 32.0
+offset_right = 548.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.94, 0.54, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "HOW TO PLAY"
+
+[node name="Title" type="Label" parent="."]
+offset_left = 48.0
+offset_top = 62.0
+offset_right = 648.0
+offset_bottom = 128.0
+theme_override_fonts/font = SubResource("DisplayFont")
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(0.72, 0.93, 0.45, 1)
+text = "MOTION MUNCH"
+
+[node name="Timer" type="Label" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -440.0
+offset_right = -296.0
+offset_top = 72.0
+offset_bottom = 120.0
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.25, 0.88, 0.78, 1)
+text = "30 SEC"
+horizontal_alignment = 2
+
+[node name="Scoreboard" type="Label" parent="."]
+anchor_right = 1.0
+offset_left = 48.0
+offset_right = -48.0
+offset_top = 132.0
+offset_bottom = 184.0
+theme_override_font_sizes/font_size = 16
+text = "Ready for a snack hunt?"
+autowrap_mode = 3
+text_overrun_behavior = 3
+clip_text = true
+
+[node name="RoomCaption" type="Label" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 28.0
+offset_right = -48.0
+offset_bottom = 50.0
+theme_override_colors/font_color = Color(0.66, 0.77, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "ROOM CODE"
+horizontal_alignment = 2
+
+[node name="RoomCode" type="Label" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 52.0
+offset_right = -48.0
+offset_bottom = 100.0
+theme_override_fonts/font = SubResource("DisplayFont")
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.72, 0.93, 0.45, 1)
+text = "------"
+horizontal_alignment = 2
+
+[node name="HostControls" type="HBoxContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -410.0
+offset_right = -48.0
+offset_top = -54.0
+offset_bottom = -12.0
+theme_override_constants/separation = 16
+alignment = 2
+
+[node name="BackToLobby" type="Button" parent="HostControls"]
+custom_minimum_size = Vector2(140, 42)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.77, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "BACK TO LOBBY"
+flat = true
+
+[node name="PrimaryButton" type="Button" parent="HostControls"]
+custom_minimum_size = Vector2(206, 42)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.95, 0.43, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.49, 0.65, 0.57, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("Play")
+theme_override_styles/hover = SubResource("PlayHover")
+theme_override_styles/pressed = SubResource("PlayHover")
+theme_override_styles/disabled = SubResource("Play")
+theme_override_styles/focus = SubResource("Focus")
+text = "START ROUND"
+
+[node name="Hint" type="Label" parent="." unique_id=248292195]
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = -48.0
+offset_right = -440.0
+offset_bottom = -20.0
+theme_override_colors/font_color = Color(0.66, 0.77, 0.7, 1)
+theme_override_font_sizes/font_size = 15
+text = "Create a room, then grab your phones."
+vertical_alignment = 1
+autowrap_mode = 3
+
+
+[connection signal="pressed" from="HostControls/PrimaryButton" to="." method="_on_primary_button"]
+[connection signal="pressed" from="HostControls/BackToLobby" to="." method="_on_back_to_lobby"]

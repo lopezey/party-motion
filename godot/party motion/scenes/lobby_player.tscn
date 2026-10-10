@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://cx2wjcue5nao"]
+
+[ext_resource type="Script" uid="uid://l3oe5nyo2vpy" path="res://party motion/scripts/face.gd" id="1"]
+
+[node name="LobbyPlayer" type="VBoxContainer" unique_id=1029853189]
+custom_minimum_size = Vector2(170, 120)
+theme_override_constants/separation = 4
+
+[node name="Swatch" type="Control" parent="." unique_id=395378408]
+custom_minimum_size = Vector2(96, 72)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+script = ExtResource("1")
+color = Color(0.2, 0.28, 0.25, 1)
+
+[node name="Name" type="Label" parent="." unique_id=1379811652]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.6, 0.66, 0.62, 1)
+theme_override_font_sizes/font_size = 18
+text = "Join the party"
+horizontal_alignment = 1
+text_overrun_behavior = 3
+
+[node name="Progress" type="ProgressBar" parent="." unique_id=841938647]
+visible = false
+layout_mode = 2
+
+[node name="Detail" type="Label" parent="." unique_id=243253295]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
